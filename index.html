@@ -1,0 +1,338 @@
+<!doctype html>
+<html lang="pl">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Twój ETF</title>
+<meta name="description" content="Drabinka pytań na wykład o ETF: dobór przykładowego funduszu. Cel edukacyjny, nie rekomendacja inwestycyjna.">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;800&display=swap" rel="stylesheet">
+<style>
+:root{
+  --bg:#ffffff; --fg:#000000; --line:#000000; --fill:#ececec; --soft:#f6f6f6;
+  --c1:#1d4ed8; --c2:#7e22ce; --c3:#c2410c; --c4:#15803d; --c5:#be185d; --c6:#a16207;
+  color-scheme: light;
+}
+@media (prefers-color-scheme: dark){
+  :root:not([data-theme="light"]){ --bg:#111111; --fg:#ffffff; --line:#ffffff; --fill:#2a2a2a; --soft:#1c1c1c;
+    --c1:#7aa2ff; --c2:#c792ff; --c3:#ff9a5c; --c4:#5fd38a; --c5:#ff77b4; --c6:#e8bf4f; color-scheme: dark; }
+}
+:root[data-theme="dark"]{ --bg:#111111; --fg:#ffffff; --line:#ffffff; --fill:#2a2a2a; --soft:#1c1c1c;
+  --c1:#7aa2ff; --c2:#c792ff; --c3:#ff9a5c; --c4:#5fd38a; --c5:#ff77b4; --c6:#e8bf4f; color-scheme: dark; }
+*{box-sizing:border-box}
+html,body{margin:0;padding:0}
+body{background:var(--bg);color:var(--fg);font-family:Inter,system-ui,-apple-system,"Segoe UI",Roboto,sans-serif;
+  font-size:17px;line-height:1.45;-webkit-text-size-adjust:100%}
+main{max-width:560px;margin:0 auto;padding:20px 16px 40px;min-height:100svh;display:flex;flex-direction:column}
+h1{font-size:30px;font-weight:800;line-height:1.1;margin:8px 0 14px;letter-spacing:-.01em}
+h2{font-size:23px;font-weight:800;line-height:1.2;margin:4px 0 14px}
+p{margin:0 0 12px}
+.card{border:1.5px solid var(--line);border-radius:14px;padding:14px 16px;margin:0 0 12px;background:transparent}
+.card h3{font-size:17px;font-weight:600;margin:0 0 6px}
+.card.fill{background:var(--fill)}
+.top{display:flex;align-items:center;justify-content:space-between;gap:12px;margin-bottom:6px;font-size:14px}
+.steps{display:flex;gap:5px;flex:1}
+.steps i{flex:1;height:6px;border-radius:3px;border:1px solid var(--line);background:transparent}
+.steps i.on{background:var(--fg)}
+.btn{display:block;width:100%;text-align:left;font:inherit;color:var(--fg);background:transparent;
+  border:1.5px solid var(--line);border-radius:14px;padding:14px 16px;margin:0 0 10px;cursor:pointer;
+  -webkit-tap-highlight-color:transparent;transition:background .15s}
+.btn b{display:block;font-weight:600;margin-bottom:2px}
+.btn span{display:block;font-size:15px}
+.btn:active,.btn:hover{background:var(--fill)}
+.btn.main{background:var(--fill);text-align:center;font-weight:600}
+.link{background:none;border:none;color:var(--fg);font:inherit;font-size:15px;text-decoration:underline;padding:8px 0;cursor:pointer}
+.small{font-size:14px}
+.tag{display:inline-block;border:1.5px solid var(--line);border-radius:999px;padding:3px 10px;font-size:14px;margin:0 6px 6px 0}
+.profile{display:flex;align-items:center;gap:14px}
+.badge{flex:none;width:58px;height:58px;border-radius:14px;display:flex;align-items:center;justify-content:center;
+  font-size:30px;font-weight:800;color:#fff}
+.name{font-size:21px;font-weight:800;line-height:1.25;margin:4px 0 12px}
+.part{display:block;padding:7px 0;border-top:1px solid var(--fill)}
+.part:first-child{border-top:none}
+.part em{font-style:normal;font-weight:600}
+ul{margin:0;padding-left:20px}
+li{margin:0 0 6px}
+.bars{display:grid;grid-template-columns:96px 1fr 52px;gap:8px 10px;align-items:center;font-size:15px}
+.bar{height:22px;border:1.5px solid var(--line);border-radius:6px;transition:width .5s ease}
+.bar.g{background:var(--fill)}
+.num{font-weight:600;text-align:right;font-variant-numeric:tabular-nums}
+.row{display:flex;gap:10px}
+.row .btn{text-align:center}
+.disc{font-size:13px;margin-top:auto;padding-top:18px}
+.fade{animation:f .25s ease}
+@keyframes f{from{opacity:0;transform:translateY(6px)}to{opacity:1;transform:none}}
+/* tryb sali (rzutnik) */
+.sala main{max-width:1200px}
+.sala h1{font-size:46px}
+.grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(260px,1fr));gap:14px}
+.sala .card{font-size:20px}
+</style>
+</head>
+<body>
+<main id="app"></main>
+
+<script>
+/* ================== DANE ==================
+   Cel edukacyjny. Nazwy i ISIN sprawdzone 14.11.2026 (justETF, Vanguard, analizy.pl).
+   Przed wykładem warto sprawdzić, czy fundusze nadal istnieją (KID). */
+const COL = ['var(--c1)','var(--c2)','var(--c3)','var(--c4)','var(--c5)','var(--c6)'];
+
+const FUNDS = {
+  allAcc: {nr:1, profil:'Cały świat, akumulujący', isin:'IE00BK5BQT80', typ:'UCITS',
+    parts:[['Vanguard','Emitent','grupa Vanguard; fundusz należy do spółki Vanguard Funds plc (Irlandia)'],
+           ['FTSE All-World','Indeks bazowy','duże i średnie spółki z krajów rozwiniętych i wschodzących'],
+           ['UCITS','Fundusz zgodny z prawem UE','może być oferowany inwestorom indywidualnym w całej UE'],
+           ['ETF','Forma','fundusz notowany na giełdzie'],
+           ['(USD)','Waluta funduszu','waluta wyceny aktywów; może różnić się od waluty notowania'],
+           ['Accumulating','Akumulujący','dywidendy są reinwestowane w funduszu']]},
+  allDist: {nr:2, profil:'Cały świat, dystrybucyjny', isin:'IE00B3RBWM25', typ:'UCITS',
+    parts:[['Vanguard','Emitent','grupa Vanguard; fundusz należy do spółki Vanguard Funds plc (Irlandia)'],
+           ['FTSE All-World','Indeks bazowy','duże i średnie spółki z krajów rozwiniętych i wschodzących'],
+           ['UCITS','Fundusz zgodny z prawem UE','może być oferowany inwestorom indywidualnym w całej UE'],
+           ['ETF','Forma','fundusz notowany na giełdzie'],
+           ['(USD)','Waluta funduszu','waluta wyceny aktywów'],
+           ['Distributing','Dystrybucyjny','dywidendy są okresowo wypłacane inwestorom']]},
+  devAcc: {nr:3, profil:'Rynki rozwinięte, akumulujący', isin:'IE00BK5BQV03', typ:'UCITS',
+    parts:[['Vanguard','Emitent','grupa Vanguard (Vanguard Funds plc, Irlandia)'],
+           ['FTSE Developed World','Indeks bazowy','duże i średnie spółki tylko z krajów rozwiniętych'],
+           ['UCITS','Fundusz zgodny z prawem UE','dostępny dla inwestorów indywidualnych w UE'],
+           ['ETF','Forma','fundusz notowany na giełdzie'],
+           ['(USD)','Waluta funduszu','waluta wyceny aktywów'],
+           ['Accumulating','Akumulujący','dywidendy są reinwestowane w funduszu']]},
+  devDist: {nr:4, profil:'Rynki rozwinięte, dystrybucyjny', isin:'IE00BKX55T58', typ:'UCITS',
+    parts:[['Vanguard','Emitent','grupa Vanguard (Vanguard Funds plc, Irlandia)'],
+           ['FTSE Developed World','Indeks bazowy','duże i średnie spółki tylko z krajów rozwiniętych'],
+           ['UCITS','Fundusz zgodny z prawem UE','dostępny dla inwestorów indywidualnych w UE'],
+           ['ETF','Forma','fundusz notowany na giełdzie'],
+           ['(USD)','Waluta funduszu','waluta wyceny aktywów'],
+           ['Distributing','Dystrybucyjny','dywidendy są okresowo wypłacane inwestorom']]},
+  devHedged: {nr:5, profil:'Rynki rozwinięte z zabezpieczeniem do złotego', isin:'PLPZUMW00018', typ:'FIZ',
+    parts:[['PZU','Emitent','TFI PZU, fundusz notowany na GPW w Warszawie'],
+           ['ETF','Forma','fundusz notowany na giełdzie'],
+           ['MSCI World','Indeks bazowy','duże i średnie spółki z krajów rozwiniętych'],
+           ['Portfelowy FIZ','Forma prawna','polski fundusz inwestycyjny zamknięty; inwestor kupuje certyfikaty inwestycyjne, nie jednostki'],
+           ['(Acc)','Akumulujący','dochody są reinwestowane w funduszu'],
+           ['(hedged) (PLN)','Zabezpieczenie walutowe','fundusz ogranicza wpływ kursów walut na wynik w złotych']]},
+  usAcc: {nr:6, profil:'USA, akumulujący', isin:'IE00B5BMR087', typ:'UCITS',
+    parts:[['iShares','Emitent','marka funduszy BlackRock (iShares plc, Irlandia)'],
+           ['Core','Linia produktów','seria funduszy o niskich kosztach'],
+           ['S&P 500','Indeks bazowy','500 dużych spółek z USA'],
+           ['UCITS ETF','Forma','fundusz notowany na giełdzie, zgodny z prawem UE'],
+           ['USD','Waluta funduszu','waluta wyceny aktywów'],
+           ['(Acc)','Akumulujący','dywidendy są reinwestowane w funduszu']]},
+  usDist: {nr:7, profil:'USA, dystrybucyjny', isin:'IE0031442068', typ:'UCITS',
+    parts:[['iShares','Emitent','marka funduszy BlackRock (iShares plc, Irlandia)'],
+           ['Core','Linia produktów','seria funduszy o niskich kosztach'],
+           ['S&P 500','Indeks bazowy','500 dużych spółek z USA'],
+           ['UCITS ETF','Forma','fundusz notowany na giełdzie, zgodny z prawem UE'],
+           ['USD','Waluta funduszu','waluta wyceny aktywów'],
+           ['(Dist)','Dystrybucyjny','dywidendy są okresowo wypłacane inwestorom']]},
+  usHedged: {nr:8, profil:'USA z zabezpieczeniem do złotego', isin:null, typ:'FIZ',
+    parts:[['Beta ETF','Emitent','fundusze Beta ETF zarządzane przez AgioFunds TFI, notowane na GPW'],
+           ['S&P 500','Indeks bazowy','500 dużych spółek z USA'],
+           ['PLN-Hedged','Zabezpieczenie walutowe','transakcje terminowe sprzedaży dolarów za złote ograniczają wpływ kursu USD/PLN'],
+           ['Portfelowy FIZ','Forma prawna','polski fundusz inwestycyjny zamknięty; inwestor kupuje certyfikaty inwestycyjne']]},
+  pl: {nr:9, profil:'Polska', isin:null, typ:'FIZ',
+    parts:[['Beta ETF','Emitent','fundusze Beta ETF zarządzane przez AgioFunds TFI, notowane na GPW'],
+           ['WIG20TR','Indeks bazowy','20 największych spółek z GPW; indeks dochodowy, uwzględnia dywidendy'],
+           ['Portfelowy FIZ','Forma prawna','polski fundusz inwestycyjny zamknięty; inwestor kupuje certyfikaty inwestycyjne'],
+           ['(akumulujący)','Polityka dochodowa','„Fundusz nie wypłaca dywidend. Wszystkie przychody i zyski Funduszu są reinwestowane”']]},
+  mix: {nr:10, profil:'Ostrożny: akcje i obligacje', isin:'IE00BMVB5P51', typ:'UCITS',
+    parts:[['Vanguard','Emitent','grupa Vanguard (Irlandia)'],
+           ['LifeStrategy','Linia produktów','fundusz funduszy: kupuje inne ETF Vanguard'],
+           ['60% Equity','Struktura portfela','ok. 60% akcji z całego świata i ok. 40% obligacji'],
+           ['UCITS ETF','Forma','fundusz notowany na giełdzie, zgodny z prawem UE'],
+           ['(EUR)','Waluta funduszu','waluta wyceny aktywów'],
+           ['Accumulating','Akumulujący','dochody są reinwestowane w funduszu']]},
+  cash: {nr:11, profil:'Krótki horyzont: obligacje', isin:'PLBETWT00010', typ:'FIZ',
+    parts:[['Beta ETF','Emitent','fundusze Beta ETF zarządzane przez AgioFunds TFI, notowane na GPW'],
+           ['Obligacji 6M','Koszyk','polskie obligacje skarbowe o krótkim, ok. półrocznym terminie'],
+           ['Portfelowy FIZ','Forma prawna','polski fundusz inwestycyjny zamknięty; inwestor kupuje certyfikaty inwestycyjne'],
+           ['(Acc) (PLN)','Akumulujący, w złotych','odsetki są reinwestowane; brak ryzyka walutowego']]},
+  tech: {nr:12, profil:'Nowe technologie', isin:'IE00B53SZB19', typ:'UCITS',
+    parts:[['iShares','Emitent','marka funduszy BlackRock (iShares plc, Irlandia)'],
+           ['NASDAQ 100','Indeks bazowy','100 największych spółek spoza sektora finansowego notowanych na giełdzie Nasdaq; dominują spółki technologiczne'],
+           ['UCITS ETF','Forma','fundusz notowany na giełdzie, zgodny z prawem UE'],
+           ['USD','Waluta funduszu','waluta wyceny aktywów'],
+           ['(Acc)','Akumulujący','dywidendy są reinwestowane w funduszu']],
+    extra:'Nasdaq-100 to nie jest indeks sektorowy. Obejmuje spółki niefinansowe z jednej giełdy, ale ponieważ dominują w nim spółki technologiczne, często służy jako „ETF na technologie”. To duża koncentracja: kilka spółek ma znaczną część wagi indeksu.'},
+  techHedged: {nr:13, profil:'Nowe technologie z zabezpieczeniem do złotego', isin:'PLBETFN00018', typ:'FIZ',
+    parts:[['Beta ETF','Emitent','fundusze Beta ETF zarządzane przez AgioFunds TFI, notowane na GPW'],
+           ['Nasdaq-100','Indeks bazowy','100 największych spółek spoza sektora finansowego notowanych na giełdzie Nasdaq'],
+           ['PLN-Hedged','Zabezpieczenie walutowe','fundusz ogranicza wpływ kursu USD/PLN na wynik'],
+           ['Portfelowy FIZ','Forma prawna','polski fundusz inwestycyjny zamknięty; inwestor kupuje certyfikaty inwestycyjne'],
+           ['(Acc) (PLN)','Akumulujący, w złotych','dochody są reinwestowane']],
+    extra:'Nasdaq-100 to nie jest indeks sektorowy, ale dominują w nim spółki technologiczne. Ten sam emitent ma też fundusz Nasdaq-100 z dźwignią 3×: pamiętaj o pułapce lewara.'},
+  btc: {nr:14, profil:'Bitcoin', isin:null, typ:'FIZ',
+    parts:[['Beta ETF','Emitent','fundusze Beta ETF zarządzane przez AgioFunds TFI; notowany na GPW od 16.09.2025'],
+           ['Bitcoin','Ekspozycja','fundusz nie kupuje bitcoina bezpośrednio; dotąd inwestuje w kontrakty terminowe na bitcoina notowane na giełdzie CME'],
+           ['Portfelowy FIZ','Forma prawna','polski fundusz inwestycyjny zamknięty; inwestor kupuje certyfikaty inwestycyjne'],
+           ['(Acc) (PLN)','Akumulujący, w złotych','ryzyko kursu USD/PLN jest zabezpieczane kontraktami forward odnawianymi co miesiąc']],
+    extra:'Różnica odwzorowania w praktyce: od początku 2026 r. do końca sierpnia fundusz stracił 17,6%, a jego indeks referencyjny 10,2%. Zarządzający wskazuje m.in. koszty transakcyjne i rolowanie kontraktów terminowych. Od stycznia 2027 r. ok. 90% portfela mają stanowić amerykańskie fundusze giełdowe na bitcoina (źródło: Analizy Online, 27.10.2026).<br><br>Inna droga to ETN, np. WisdomTree Physical Bitcoin (ISIN GB00BJYDH287): papier dłużny emitenta zabezpieczony bitcoinem, a nie fundusz. ETN to nie ETF.'},
+  gold: {nr:15, profil:'Złoto', isin:'IE00B4ND3602', typ:'ETC',
+    parts:[['iShares','Emitent','marka BlackRock'],
+           ['Physical Gold','Instrument bazowy','złoto fizyczne przechowywane w skarbcu'],
+           ['ETC','Forma','papier dłużny notowany na giełdzie, zabezpieczony złotem; to nie jest fundusz']],
+    extra:'ETC to nie ETF. ETF na jeden surowiec nie spełniałby wymogów dywersyfikacji UCITS, dlatego ekspozycję na złoto w UE zwykle daje ETC. Wynik w złotych zależy też od kursu USD/PLN.'}
+};
+const SHORT = {
+  tech:'Przykładowy fundusz jest akumulujący, więc pytanie o dywidendy odpada.',
+  techHedged:'Przykładowy fundusz jest akumulujący, więc pytanie o dywidendy odpada.',
+  btc:'Bitcoin nie wypłaca dywidend, a fundusz zabezpiecza walutę. Pułapkę lewara pomijamy: sam bitcoin jest bardzo zmienny.',
+  gold:'Złoto nie wypłaca dywidend. To inny instrument niż ETF akcyjny, więc dalsze pytania nie mają zastosowania.',
+  cash:'Przy horyzoncie do 2 lat wybór rynku akcji, waluty czy dywidend nie ma znaczenia: najpierw liczy się bezpieczeństwo kapitału.',
+  mix:'Pozostałe pytania dotyczą ETF akcyjnych. Przy niskiej tolerancji ryzyka punktem wyjścia jest portfel mieszany.',
+  pl:'Fundusz na polskie akcje jest wyceniany w złotych, więc nie ma ryzyka walutowego. Przykładowy fundusz jest akumulujący, więc pytanie o dywidendy odpada.',
+  devHedged:'Przykładowy fundusz z zabezpieczeniem do złotego jest akumulujący, więc pytanie o dywidendy odpada.',
+  usHedged:'Przykładowy fundusz z zabezpieczeniem do złotego reinwestuje dochody, więc pytanie o dywidendy odpada.'
+};
+function fullName(f){ return f.parts.map(p=>p[0]).join(' '); }
+const COLORS = {12:'#0f766e',13:'#115e59',14:'#b45309',15:'#854d0e',1:'#1d4ed8',2:'#2563eb',3:'#7e22ce',4:'#9333ea',5:'#6b21a8',6:'#c2410c',7:'#ea580c',8:'#9a3412',9:'#be185d',10:'#15803d',11:'#a16207'};
+
+/* ================== PYTANIA ================== */
+const Q = {
+  horyzont:{t:'Kiedy możesz potrzebować tych pieniędzy?', h:'Horyzont inwestycyjny', a:[
+    ['W ciągu 2 lat','np. wkład własny, wyjazd, rezerwa', s=>{s.why.push(['Horyzont do 2 lat','Akcje mogą w tym czasie stracić kilkadziesiąt procent. Krótki horyzont to obligacje krótkoterminowe w złotych.']); return 'R:cash';}],
+    ['Za 3–10 lat','np. mieszkanie, firma', s=>{s.why.push(['Horyzont 3–10 lat','Akcje są możliwe, ale trzeba liczyć się z dużymi wahaniami.']); return 'spadek';}],
+    ['Za ponad 10 lat','np. emerytura, „kiedyś”', s=>{s.why.push(['Horyzont ponad 10 lat','Długi horyzont pozwala przeczekać spadki, więc ETF akcyjny ma sens.']); return 'spadek';}]]},
+  spadek:{t:'Po roku Twój ETF jest 30% pod kreską. Co robisz?', h:'Tolerancja ryzyka', a:[
+    ['Sprzedaję, nie mogę spać','strata mnie paraliżuje', s=>{s.why.push(['Niska tolerancja ryzyka','Portfel mieszany (akcje i obligacje) zwykle spada mniej niż sam portfel akcji.']); return 'R:mix';}],
+    ['Czekam','wiem, że rynki wracają, choć nie zawsze szybko', s=>{s.why.push(['Przeciętna lub wysoka tolerancja ryzyka','Możesz trzymać ETF akcyjny w okresie spadków.']); return 'temat';}],
+    ['Dokupuję','taniej znaczy lepiej', s=>{s.why.push(['Wysoka tolerancja ryzyka','Możesz trzymać ETF akcyjny w okresie spadków.']); return 'temat';}]]},
+  temat:{t:'Co Cię najbardziej interesuje?', h:'Ekspozycja', a:[
+    ['Szeroki rynek akcji','tysiące lub setki spółek naraz', s=>{s.why.push(['Szeroki rynek','Indeks obejmujący wiele spółek daje największą dywersyfikację.']); return 'region';}],
+    ['Nowe technologie','Apple, Microsoft, Nvidia…', s=>{s.region='tech'; s.why.push(['Nowe technologie','Indeks Nasdaq-100: duża koncentracja w kilkunastu spółkach technologicznych, wyższe ryzyko niż szeroki rynek.']); return 'lewar';}],
+    ['Bitcoin','kryptowaluty', s=>{s.why.push(['Bitcoin','Bardzo zmienna inwestycja bez przepływów pieniężnych; spadki o ponad 50% zdarzały się wielokrotnie.']); return 'R:btc';}],
+    ['Złoto','„bezpieczna przystań”', s=>{s.why.push(['Złoto','Surowiec bez dywidend i odsetek; zarabiasz tylko na zmianie ceny.']); return 'R:gold';}]]},
+  region:{t:'Na jaki rynek chcesz postawić?', h:'Indeks bazowy', a:[
+    ['Cały świat','kraje rozwinięte i wschodzące', s=>{s.region='all'; s.why.push(['Cały świat','Indeks FTSE All-World: największa dywersyfikacja, kilka tysięcy spółek.']); return 'lewar';}],
+    ['Tylko kraje rozwinięte','bez rynków wschodzących', s=>{s.region='dev'; s.why.push(['Kraje rozwinięte','Indeks bez rynków wschodzących, np. bez Chin, Indii, Brazylii; mimo to dominują w nim spółki z USA.']); return 'lewar';}],
+    ['Tylko USA','największy rynek akcji', s=>{s.region='us'; s.why.push(['USA','S&P 500: 500 dużych spółek; większa koncentracja w jednym kraju.']); return 'lewar';}],
+    ['Tylko Polska','znam te spółki', s=>{s.region='pl'; s.why.push(['Polska','WIG20TR: 20 spółek, bardzo mała dywersyfikacja, duży udział banków i energetyki.']); return 'lewar';}]]},
+  lewar:{t:'Kusi Cię ETF lewarowany 2×, żeby zarabiać dwa razy szybciej?', h:'ETF lewarowany', a:[
+    ['Tak, biorę 2×','podwójny zysk brzmi świetnie', s=>'DEMO'],
+    ['Nie, zostaję przy zwykłym ETF','', s=>{s.why.push(['Bez lewara','Cel „2×” dotyczy jednego dnia; przy długim horyzoncie wynik może mocno odbiegać od 2 × indeks.']); return s.region==='pl'?'R:pl':'waluta';}]]},
+  waluta:{t:'Akcje z zagranicy są wyceniane w obcej walucie. Co z kursem złotego?', h:'Ryzyko walutowe', a:[
+    ['Akceptuję ryzyko walutowe','kurs może pomóc albo zaszkodzić', s=>{s.why.push(['Bez zabezpieczenia walutowego','Wynik w złotych zależy od stopy zwrotu w walucie aktywów i od zmiany kursu.']); return s.region==='tech'?'R:tech':'dochody';}],
+    ['Chcę zabezpieczenia do złotego','liczy się wynik w PLN', s=>{
+      if(s.region==='all'){ s.region='dev'; s.why.push(['Zabezpieczenie walutowe','W przykładach z tej aplikacji zabezpieczony do złotego jest fundusz na kraje rozwinięte, więc zamieniamy „cały świat” na „kraje rozwinięte”.']); }
+      else s.why.push(['Zabezpieczenie walutowe','Fundusz zawiera transakcje terminowe na walutę; nie jest to bezpłatne ani doskonałe.']);
+      return s.region==='us'?'R:usHedged':s.region==='tech'?'R:techHedged':'R:devHedged';}]]},
+  dochody:{t:'Co ma się dziać z dywidendami?', h:'Akumulujący czy dystrybucyjny', a:[
+    ['Niech pracują dalej','fundusz je reinwestuje', s=>{s.why.push(['Akumulujący','Dywidendy zwiększają wartość aktywów netto na jednostkę, nie trafiają na Twoje konto.']); return 'R:'+s.region+'Acc';}],
+    ['Chcę je dostawać','wypłata na rachunek', s=>{s.why.push(['Dystrybucyjny','Fundusz okresowo wypłaca dochody; w dniu ustalenia prawa do wypłaty WAN na jednostkę spada o kwotę wypłaty.']); return 'R:'+s.region+'Dist';}]]}
+};
+const ORDER = ['horyzont','spadek','temat','region','lewar','waluta','dochody'];
+
+/* ================== STAN I WIDOKI ================== */
+let S;
+const app = document.getElementById('app');
+const esc = t => String(t).replace(/[&<>"]/g, c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
+function reset(){ S={why:[],region:null,hist:[]}; }
+function render(html){ app.innerHTML='<div class="fade">'+html+'</div>'; window.scrollTo(0,0); }
+const DISC = '<p class="disc">Aplikacja ma cel wyłącznie edukacyjny na potrzeby wykładu „Rynki finansowe”. Nie jest rekomendacją inwestycyjną ani doradztwem. Fundusze podano jako przykłady; przed decyzją przeczytaj dokument KID.</p>';
+
+function start(){
+  reset();
+  render(`
+    <h1>Twój ETF</h1>
+    <div class="card"><p>Odpowiesz na kilka pytań, a aplikacja dobierze przykładowy ETF i pokaże, jak czytać jego nazwę.</p>
+    <p style="margin:0">Na końcu dostaniesz numer profilu. Zapamiętaj go: sprawdzimy, jak rozkładają się wyniki na sali.</p></div>
+    <button class="btn main" onclick="ask('horyzont')">Zaczynam</button>
+    ${DISC}`);
+}
+
+function ask(id){
+  const q = Q[id], idx = ORDER.indexOf(id);
+  S.hist.push(id);
+  render(`
+    <p class="small" style="margin:6px 0 2px">Pytanie ${S.hist.length} · ${q.h}</p>
+    <h2>${q.t}</h2>
+    ${q.a.map((a,i)=>`<button class="btn" onclick="pick('${id}',${i})"><b>${a[0]}</b>${a[1]?`<span>${a[1]}</span>`:''}</button>`).join('')}
+    ${S.hist.length>1?'<button class="link" onclick="back()">← Wstecz</button>':''}
+  `);
+}
+function back(){ S.hist.pop(); const prev=S.hist.pop(); S.why.pop(); ask(prev); }
+
+function pick(id,i){
+  const next = Q[id].a[i][2](S);
+  if(next==='DEMO') return demo(0);
+  if(next.startsWith('R:')) return result(next.slice(2));
+  ask(next);
+}
+
+/* --- ETF lewarowany: 100 → 110 → 99 vs 100 → 120 → 96 --- */
+function demo(day){
+  const idx=[100,110,99], lev=[100,120,96];
+  const w=v=>Math.round(v/130*100);
+  const lbl=['Start','Dzień 1: indeks +10%','Dzień 2: indeks −10%'][day];
+  const txt=[
+    'Masz 100 zł w zwykłym ETF na indeks i 100 zł w ETF lewarowanym 2×. Zobaczmy dwa dni.',
+    'Indeks rośnie o 10%. ETF 2× rośnie o 20%: ma 120 zł. Na razie wygląda świetnie.',
+    'Indeks spada o 10%. ETF 2× spada o 20%, ale liczone od 120 zł, czyli o 24 zł.'][day];
+  render(`
+    <p class="small" style="margin:6px 0 2px">ETF lewarowany</p>
+    <h2>Sprawdźmy na liczbach</h2>
+    <div class="card">
+      <p style="font-weight:600">${lbl}</p>
+      <div class="bars">
+        <span>ETF na indeks</span><div><div class="bar" style="width:${w(idx[day])}%"></div></div><span class="num">${idx[day]} zł</span>
+        <span>ETF 2×</span><div><div class="bar g" style="width:${w(lev[day])}%"></div></div><span class="num">${lev[day]} zł</span>
+      </div>
+      <p style="margin:12px 0 0">${txt}</p>
+    </div>
+    ${day<2?`<button class="btn main" onclick="demo(${day+1})">Następny dzień</button>`:`
+    <div class="card fill"><p><b>Wynik:</b> indeks −1%, ETF 2× −4%, a nie −2%.</p>
+    <p style="margin:0">Cel „2×” dotyczy jednego dnia. Spadek trafił na większą ekspozycję (120 zł), bo dzień wcześniej fundusz urósł. To produkt krótkoterminowy, nie na lata.</p></div>
+    <button class="btn main" onclick="afterDemo()">Rozumiem, wracam do zwykłego ETF</button>`}
+  `);
+}
+function afterDemo(){
+  S.why.push(['Bez lewara (po namyśle)','ETF 2× przy wahaniach w górę i w dół traci więcej niż 2 × indeks; przy długim horyzoncie to zły wybór.']);
+  S.lever=true;
+  if(S.region==='pl') return result('pl');
+  ask('waluta');
+}
+
+function result(key){
+  const f=FUNDS[key], col=COLORS[f.nr];
+  const nm=f.parts.map((p,i)=>`<span style="color:${COL[i%6]}">${esc(p[0])}</span>`).join(' ');
+  const parts=f.parts.map((p,i)=>`<span class="part"><em style="color:${COL[i%6]}">${esc(p[0])}</em> · ${esc(p[1])}<br><span class="small">${esc(p[2])}</span></span>`).join('');
+  const form = {UCITS:'Fundusz UCITS z siedzibą w Irlandii, notowany na giełdach europejskich. Tytuły uczestnictwa kupujesz na giełdzie przez dom maklerski.',
+    FIZ:'Polski ETF w formie funduszu inwestycyjnego zamkniętego, notowany na GPW. Kupujesz certyfikaty inwestycyjne przez dom maklerski.',
+    ETC:'Exchange traded commodity: papier dłużny emitenta notowany na giełdzie. Kupujesz go przez dom maklerski jak ETF, ale to nie jest fundusz.'}[f.typ];
+  render(`
+    <p class="small" style="margin:6px 0 8px">Twój wynik</p>
+    <div class="card profile"><div class="badge" style="background:${col}">${f.nr}</div>
+      <div><div class="small">Profil ${f.nr}</div><div style="font-weight:800;font-size:19px;line-height:1.2">${esc(f.profil)}</div></div></div>
+    ${SHORT[key]?`<div class="card fill"><h3>Dlaczego bez dalszych pytań</h3><p style="margin:0">${SHORT[key]}</p></div>`:''}
+    <div class="card"><h3>${f.typ==='ETC'?'Przykładowy instrument':'Przykładowy ETF'}</h3>
+      <div class="name">${nm}</div>
+      ${f.isin?`<span class="tag">ISIN ${f.isin}</span>`:''}<span class="tag">${{UCITS:'UCITS',FIZ:'FIZ, GPW',ETC:'ETC, nie ETF'}[f.typ]}</span>
+      <p class="small" style="margin:6px 0 0">${form}</p></div>
+    <div class="card"><h3>Jak czytać tę nazwę</h3>${parts}</div>
+    ${f.extra?`<div class="card"><h3>Warto wiedzieć</h3><p style="margin:0">${f.extra}</p></div>`:''}
+    <div class="card"><h3>Dlaczego ten fundusz</h3><ul>${S.why.map(w=>`<li><b style="font-weight:600">${esc(w[0])}.</b> ${esc(w[1])}</li>`).join('')}</ul></div>
+    <div class="card fill"><h3>Zanim kupisz cokolwiek naprawdę</h3>
+      <p style="margin:0">Porównaj koszty (TER), różnicę odwzorowania, wielkość funduszu i sposób replikacji. Te same pytania mogą prowadzić do innych funduszy na ten sam indeks.</p></div>
+    <button class="btn main" onclick="start()">Zacznij od nowa</button>
+    ${DISC}`);
+}
+
+/* --- Tryb sali: ?sala w adresie, na rzutnik --- */
+function sala(){
+  document.body.classList.add('sala');
+  const items=Object.values(FUNDS).sort((a,b)=>a.nr-b.nr).map(f=>`
+    <div class="card profile"><div class="badge" style="background:${COLORS[f.nr]}">${f.nr}</div>
+    <div><div style="font-weight:800">${esc(f.profil)}</div><div class="small" style="font-size:16px">${esc(fullName(f))}</div></div></div>`).join('');
+  render(`<h1>Twój ETF: profile na sali</h1>
+    <p style="font-size:22px">Podnieś rękę, gdy usłyszysz numer swojego profilu.</p>
+    <div class="grid">${items}</div>
+    <p class="disc" style="font-size:16px">Cel edukacyjny, nie rekomendacja inwestycyjna.</p>`);
+}
+
+if(new URLSearchParams(location.search).has('sala')) sala(); else start();
+</script>
+</body>
+</html>
